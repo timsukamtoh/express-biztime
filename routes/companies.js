@@ -33,6 +33,8 @@ router.get("/:code", async function (req, res, next) {
     [code]
   );
   const company = results.rows[0];
+  if (!company) throw new NotFoundError(`Not found: ${code}`);
+
   return res.json({ company });
 });
 
@@ -50,6 +52,7 @@ router.post("/", async function (req, res, next) {
     [code, name, description],
   );
   const company = results.rows[0];
+
   return res.status(201).json({ company });
 });
 
@@ -70,6 +73,8 @@ router.put("/:code", async function (req, res, next) {
     [name, description, code],
   );
   const company = results.rows[0];
+  if (!company) throw new NotFoundError(`Not found: ${code}`);
+
   return res.status(201).json({ company });
 });
 
@@ -78,10 +83,18 @@ router.put("/:code", async function (req, res, next) {
  * { status: "Deleted" }
 */
 router.delete("/:code", async function (req, res, next) {
-  await db.query(
-    "DELETE FROM companies WHERE code = $1",
-    [req.params.code],
+  const { code } = req.params;
+  const results = await db.query(
+    `DELETE
+          FROM companies
+          WHERE code = $1
+          RETURNING code, name, description`,
+    [code],
   );
+
+  const company = results.rows[0];
+  if (!company) throw new NotFoundError(`Not found: ${code}`);
+
   return res.json({ status: "Deleted" });
 });
 
