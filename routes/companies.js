@@ -2,19 +2,20 @@
 
 const express = require('express');
 
-const { NotFoundError } = require("../expressError");
+const { NotFoundError, BadRequestError } = require("../expressError");
 const router = new express.Router();
 
 const db = require("../db");
 
 /**
- * the “get list of companies should return”:
- * {companies: [{code, name}, ...]}
+ * Get a list of companies:
+ * {companies: [{code, name}]}
 */
 router.get("/", async function (req, res, next) {
   const results = await db.query(
     `SELECT code, name
-            FROM companies`);
+            FROM companies
+            ORDER BY code`);
 
   return res.json({ companies: results.rows });
 });
@@ -64,6 +65,8 @@ router.put("/:code", async function (req, res, next) {
   const { name, description } = req.body;
   const { code } = req.params;
 
+  if (!name || !description) throw new BadRequestError('Invalid inputs');
+
   const results = await db.query(
     `UPDATE companies
            SET name=$1,
@@ -73,9 +76,10 @@ router.put("/:code", async function (req, res, next) {
     [name, description, code],
   );
   const company = results.rows[0];
+
   if (!company) throw new NotFoundError(`Not found: ${code}`);
 
-  return res.status(201).json({ company });
+  return res.json({ company });
 });
 
 /**
@@ -88,11 +92,12 @@ router.delete("/:code", async function (req, res, next) {
     `DELETE
           FROM companies
           WHERE code = $1
-          RETURNING code, name, description`,
+          RETURNING code`,
     [code],
   );
 
   const company = results.rows[0];
+
   if (!company) throw new NotFoundError(`Not found: ${code}`);
 
   return res.json({ status: "Deleted" });
