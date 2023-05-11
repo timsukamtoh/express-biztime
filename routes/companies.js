@@ -1,8 +1,8 @@
 "use strict";
 
-const express = require('express')
+const express = require('express');
 
-const { NotFoundError } = require("../expressError")
+const { NotFoundError } = require("../expressError");
 const router = new express.Router();
 
 const db = require("../db");
@@ -16,12 +16,12 @@ router.get("/", async function (req, res, next) {
     `SELECT code, name
             FROM companies`);
 
-  return res.json({companies: results.rows})
+  return res.json({ companies: results.rows });
 });
 
 /**
- * the “get list of companies should return”:
- * {company: [{code, name, description}, ...]}
+ * Get a single company by its code:
+ * {company: {code, name, description}}
 */
 router.get("/:code", async function (req, res, next) {
   const { code } = req.params;
@@ -33,7 +33,56 @@ router.get("/:code", async function (req, res, next) {
     [code]
   );
   const company = results.rows[0];
-  return res.json({company});
+  return res.json({ company });
+});
+
+/**
+ * Create a company in the database and return its JSON:
+ * {company: {code, name, description}}
+*/
+router.post("/", async function (req, res, next) {
+  const { code, name, description } = req.body;
+
+  const results = await db.query(
+    `INSERT INTO companies (code, name, description)
+           VALUES ($1, $2, $3)
+           RETURNING code, name, description`,
+    [code, name, description],
+  );
+  const company = results.rows[0];
+  return res.status(201).json({ company });
+});
+
+/**
+ * Update a company in the database and return its JSON:
+ * {company: {code, name, description}}
+*/
+router.put("/:code", async function (req, res, next) {
+  const { name, description } = req.body;
+  const { code } = req.params;
+
+  const results = await db.query(
+    `UPDATE companies
+           SET name=$1,
+               description=$2
+           WHERE code = $3
+           RETURNING code, name, description`,
+    [name, description, code],
+  );
+  const company = results.rows[0];
+  return res.status(201).json({ company });
+});
+
+/**
+ * Delete a company in the db and return JSON:
+ * { status: "Deleted" }
+*/
+router.delete("/:code", async function (req, res, next) {
+  await db.query(
+    "DELETE FROM companies WHERE code = $1",
+    [req.params.code],
+  );
+  return res.json({ status: "Deleted" });
 });
 
 module.exports = router;
