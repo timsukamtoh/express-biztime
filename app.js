@@ -10,10 +10,10 @@ const app = express();
 app.use(express.json());
 
 const companies = require("./routes/companies");
-// const invoices = require("./routes/invoices");
+const invoices = require("./routes/invoices");
 
 app.use("/companies", companies);
-// app.use("/invoices", invoices);
+app.use("/invoices", invoices);
 
 
 /** 404 handler: matches unmatched routes; raises NotFoundError. */

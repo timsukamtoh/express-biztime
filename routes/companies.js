@@ -46,6 +46,8 @@ router.get("/:code", async function (req, res, next) {
 router.post("/", async function (req, res, next) {
   const { code, name, description } = req.body;
 
+  if (!name || !description) throw new BadRequestError('Invalid inputs');
+
   const results = await db.query(
     `INSERT INTO companies (code, name, description)
            VALUES ($1, $2, $3)
