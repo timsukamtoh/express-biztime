@@ -47,19 +47,9 @@ router.get("/:id", async function (req, res, next) {
   );
   invoice.company = companyResults.rows[0];
 
+  delete invoice.comp_code;
 
-  //TODO: delete invoice.comp_code
-  // return res.json({ invoice });
-  return res.json({
-    "invoice": {
-      "id": invoice.id,
-      "amt": invoice.amt,
-      "paid": invoice.paid,
-      "add_date": invoice.add_date,
-      "paid_date": invoice.paid_date,
-      "company": invoice.company
-    }
-  })
+  return res.json({ invoice });
 });
 
 /**
