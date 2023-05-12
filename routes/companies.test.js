@@ -39,8 +39,7 @@ describe("GET /companies", function () {
 describe("GET /companies/:code", function () {
   test("Gets single company", async function () {
     const resp = await request(app).get(`/companies/${testCompany.code}`);
-    console.log("test company = ", testCompany)
-    console.log("resp body = ", resp.body)
+
     expect(resp.body).toEqual({ company: testCompany });
   });
 
@@ -49,6 +48,36 @@ describe("GET /companies/:code", function () {
     expect(resp.statusCode).toEqual(404);
   });
 });
+
+
+
+/** POST /companies - create cat from data; return `{company: company}` */
+
+describe("POST /companies", function () {
+  test("Create new company", async function () {
+    const resp = await request(app)
+        .post(`/companies`)
+        .send({code:"BBC2",
+              name:"Brians Second Company",
+              description:"He has 2!"});
+
+    expect(resp.statusCode).toEqual(201);
+    expect(resp.body).toEqual({company: {
+                                code:"BBBC2",
+                                name:"Brians Second Company",
+                                description:"He has 2!"}});
+  });
+
+  test("400 if empty request body", async function () {
+    const resp = await request(app)
+        .post(`/companies`)
+        .send();
+    expect(resp.statusCode).toEqual(400);
+  });
+});
+
+
+
 
 afterAll(async function () {
   // close db connection --- if you forget this, Jest will hang
